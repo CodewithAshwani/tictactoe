@@ -1,9 +1,13 @@
 import React, { useState } from "react";
 import Square from "./Square";
+import winSound from "../audio/mixkit-animated-small-group-applause-523.wav";
 
 const Board = () => {
   const [state, setState] = useState(Array(9).fill(null));
   const [isXTurn, setIsXTurn] = useState(true);
+  const [scoreX, setScoreX] = useState(0);
+  const [scoreO, setScoreO] = useState(0);
+  const winAudio = new Audio(winSound);
 
   const checkWinner = () => {
     const winnerLogic = [
@@ -20,8 +24,14 @@ const Board = () => {
     for (let logic of winnerLogic) {
       const [a, b, c] = logic;
       if (state[a] !== null && state[a] === state[b] && state[a] === state[c]) {
+        winAudio.play();
         return state[a];
       }
+    }
+
+    // Check for a draw
+    if (state.every((value) => value !== null)) {
+      return "draw";
     }
 
     return false;
@@ -41,18 +51,38 @@ const Board = () => {
 
   const handleReset = () => {
     setState(Array(9).fill(null));
+    setScoreX(0); // Reset the score for X
+    setScoreO(0); // Reset the score for O
+    winAudio.pause();
+    winAudio.currentTime = 0;
   };
 
   return (
     <div className="board-container">
-      {isWinner ? (
+      {isWinner && isWinner !== "draw" ? (
         <>
-          {isWinner} won the game{" "}
-          <button onClick={handleReset}>Play Again</button>
+          <span className="winner-text">{isWinner} WON THE GAME</span>{" "}
+          <button onClick={handleReset} className="play-again-button">
+            Play Again
+          </button>
+          <h4 className="score-label">Score:</h4>
+          <div className="score">
+            <span>X:</span> {isWinner === "X" ? scoreX + 1 : scoreX}
+          </div>
+          <div className="score">
+            <span>O:</span> {isWinner === "O" ? scoreO + 1 : scoreO}
+          </div>
+        </>
+      ) : isWinner === "draw" ? (
+        <>
+          It's a Draw
+          <button onClick={handleReset} className="play-again-button">
+            Play Again
+          </button>
         </>
       ) : (
         <>
-          <h4>Player {isXTurn ? "X" : "O"} please move</h4>
+          <h4 className="hello">PLAYER {isXTurn ? "X" : "O"} PLEASE MOVE</h4>
           <div className="board-row">
             <Square onClick={() => handleClick(0)} value={state[0]} />
             <Square onClick={() => handleClick(1)} value={state[1]} />
